@@ -8,7 +8,7 @@ Other features:
 * Custom registration for system signals (`SIGINT`, `SIGIO`, etc.)
 * Programmatic termination
 
-[![Build Status](https://travis-ci.org/Hearst-DD/spackler.svg?branch=master)](https://travis-ci.org/Hearst-DD/spackler) [![Coverage](http://gocover.io/_badge/github.com/Hearst-DD/spackler?v=1)](http://gocover.io/github.com/Hearst-DD/spackler?v=1) [![GoDoc](https://godoc.org/github.com/Hearst-DD/spackler?status.svg)](https://godoc.org/github.com/Hearst-DD/spackler)
+[![Build Status](https://travis-ci.org/Hearst-DD/spackler.svg?branch=master)](https://travis-ci.org/Hearst-DD/spackler) [![Coverage](http://gocover.io/_badge/github.com/Hearst-DD/spackler)](http://gocover.io/github.com/Hearst-DD/spackler) [![GoDoc](https://godoc.org/github.com/Hearst-DD/spackler?status.svg)](https://godoc.org/github.com/Hearst-DD/spackler)
 
 Install
 =======
