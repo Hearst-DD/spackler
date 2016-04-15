@@ -1,4 +1,3 @@
-// Package spackler provides mechanisms for the graceful termination of an application.
 package spackler
 
 import (
@@ -103,6 +102,7 @@ func (c *Caddy) Looper(interval time.Duration, runImmediately bool, f func()) {
 		select {
 		case <-t:
 
+			// select has no precedence
 			// always return on quit
 			select {
 			case <-c.stopChan:
