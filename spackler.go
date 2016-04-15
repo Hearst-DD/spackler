@@ -81,7 +81,7 @@ func (c *Caddy) Stop() {
 
 // Looper calls the provided function on the specified interval.
 // Delays due to a long function run time are handled per time.Ticker.
-// On the stop signal, the loop exits and Looper returnsl
+// On the stop signal, the loop exits and Looper returns.
 func (c *Caddy) Looper(interval time.Duration, runImmediately bool, f func()) {
 	c.listen()
 
