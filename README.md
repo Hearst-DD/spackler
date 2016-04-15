@@ -1,7 +1,7 @@
 spackler
 ========
 
-Spackler enables graceful application termination.  It allows running tasks to complete while preventing new tasks from starting.  Spackler accomplishes this by managing goroutines and canceling scheduled tasks.  This can be of value, for example, in preserving data integrity.
+Spackler enables graceful application termination.  It allows running tasks to complete while preventing new tasks from starting.  Spackler accomplishes this by managing goroutines and exiting timer loops.  This can be of value, for example, in preserving data integrity.
 
 Other features:
 * Stop signal available for custom use such as exiting loops
