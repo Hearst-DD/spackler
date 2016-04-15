@@ -40,7 +40,7 @@
 //
 //  func main() {
 //
-//    caddy := spackler.NewCaddy(true)
+//    caddy := spackler.New(true)
 //
 //    // doSomething() in a tracked goroutine
 //    caddy.Looper(1000, true, func() {
