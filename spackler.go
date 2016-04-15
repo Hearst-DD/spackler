@@ -1,4 +1,3 @@
-// Package spackler provides mechanisms for the graceful termination of an application.
 package spackler
 
 import (
@@ -9,92 +8,6 @@ import (
 	"syscall"
 	"time"
 )
-
-/*
-
-Spackler allows running tasks to complete and prevents new tasks from starting.
-
-This is accomplished in two ways:
-
-1) A mechanism for tracking goroutines is provided.  After a stop signal has been
-received, untracked goroutines are prevented from starting new goroutines, but
-tracked goroutines are allowed to start new tracked goroutines in order to complete
-their tasks.
-
-2) A mechanism is provided to execute recurring tasks on a fixed interval.  This
-mechanism exits after a stop signal has been received.
-
-Other features:
-- Stop signal available for custom use such as the termination of for loops
-- Custom registration for system signals (SIGINT, SIGIO, etc.)
-- Programmatic termination
-
-
-Operation:
-
-When Go() or Looper() are called, Spackler starts a goroutine that blocks on
-sigChan, which may be registered to receive system signals, such as SIGINT.  When
-a signal is received, the goroutine closes stopChan, effectively broadcasting
-"stop!" to any one reading from that channel.
-
-Both Go() and Looper() read from stopChan.  Looper() exits when it reads from stopChan.
-Go() conditionally reads from stopChan if it has been called from an untracked
-goroutine.  If it reads from stopChan, it returns an error rather than creating
-a new tracked goroutine.
-
-Caddy is composed of reference fields that maintain system state, as well as a single
-value field which indicates whether the current instance was created in a tracked
-goroutine.  This value determines whether Go() should read stopChan.
-
-
-Example:
-
-func doSomething(caddy *spackler.Caddy) {
-	for i := 0; i < 10; i++{
-
-		//return on stop signal
-		select {
-		case <-caddy.Stopping():
-			return
-		default:
-		}
-
-		// do something
-	}
-
-}
-
-func doSomethingElse() { // do something else }
-
-func main() {
-
-	caddy := spackler.NewCaddy(true)
-
-	caddy.Looper(1000, true, func() {
-		caddy.Go(doSomething)
-	})
-
-	// you can wrap functions that don't need a Caddy in annonymous functions
-	err := caddy.Go(func(c *spackler.Caddy) {
-		doSomethingElse()
-	})
-
-	caddy.Wait()
-}
-
-On SIGINT, Looper will return.  The next instruction in main(), a call to Go(), will
-fail and main() will block on Wait() until all running instances of doSomething()
-have completed.  doSomething() may be interrupted by the stop signal at the top
-of the for loop.
-
-
-Package name:
-
-This package is named for Carl Spackler, the fictional golf caddy and greenskeeper
-portrayed by actor Bill Murray in the film, 'Caddyshack', who is entrusted with
-the graceful termination of gophers.
-
-*/
 
 // Caddy tracks multiple goroutines ensuring they exit before the
 // main routine exits.
@@ -125,7 +38,9 @@ func NewCaddy(stopOnOS bool) *Caddy {
 
 // public methods //
 
-// Go calls the provided function in a tracked goroutine.
+// Go provides goroutine tracking.  It is used in place of the go statement.
+// It calls the provided function passing in a *Caddy which may be used to make
+// subsequent calls to Go() and Looper().
 func (c *Caddy) Go(f func(caddy *Caddy)) error {
 	c.listen()
 
@@ -165,9 +80,10 @@ func (c *Caddy) Stop() {
 	c.sigChan <- syscall.SIGINT
 }
 
-// Looper calls the provided function on the specified interval.
-// Delays due to a long function run time are handled per time.Ticker.
-// On the stop signal, the loop exits and Looper returnsl
+// Looper provides cancelable task execution on the specified interval.  It does
+// not start new goroutines, but the provided function may.  On the stop signal,
+// the loop exits and Looper returns.  Function execution is synchronous and
+// delays due to long function run time are handled per time.Ticker.
 func (c *Caddy) Looper(interval time.Duration, runImmediately bool, f func()) {
 	c.listen()
 
@@ -189,6 +105,7 @@ func (c *Caddy) Looper(interval time.Duration, runImmediately bool, f func()) {
 		select {
 		case <-t:
 
+			// select has no precedence
 			// always return on quit
 			select {
 			case <-c.stopChan:
