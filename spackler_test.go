@@ -11,13 +11,13 @@ import (
 const TEST_TIMEOUT = time.Duration(5 * time.Second)
 
 func Test_No_Goroutines(t *testing.T) {
-	s := NewCaddy(false)
+	s := New(false)
 
 	assert.True(t, wait(s))
 }
 
 func Test_Stop(t *testing.T) {
-	s1 := NewCaddy(false)
+	s1 := New(false)
 	wg := sync.WaitGroup{}
 
 	wg.Add(1)
@@ -35,7 +35,7 @@ func Test_Stop(t *testing.T) {
 }
 
 func Test_SigChan(t *testing.T) {
-	s1 := NewCaddy(false)
+	s1 := New(false)
 	sigChan := s1.SigChan()
 
 	s1.Go(func(s2 *Caddy) {
@@ -47,7 +47,7 @@ func Test_SigChan(t *testing.T) {
 }
 
 func Test_Blocking(t *testing.T) {
-	s1 := NewCaddy(false)
+	s1 := New(false)
 	c1 := make(chan int)
 	c2 := make(chan int)
 
@@ -82,7 +82,7 @@ func Test_Blocking(t *testing.T) {
 }
 
 func Test_Nested_Goroutines(t *testing.T) {
-	s1 := NewCaddy(false)
+	s1 := New(false)
 	x := 0
 
 	s1.Go(func(s2 *Caddy) {
@@ -99,7 +99,7 @@ func Test_Nested_Goroutines(t *testing.T) {
 }
 
 func Test_While_Stopping(t *testing.T) {
-	s1 := NewCaddy(false)
+	s1 := New(false)
 	c := make(chan int)
 
 	s1.Go(func(s2 *Caddy) {
@@ -120,7 +120,7 @@ func Test_While_Stopping(t *testing.T) {
 }
 
 func Test_Ten_Goroutines(t *testing.T) {
-	s1 := NewCaddy(false)
+	s1 := New(false)
 	x := 0
 
 	for i := 0; i < 10; i++ {
@@ -135,7 +135,7 @@ func Test_Ten_Goroutines(t *testing.T) {
 }
 
 func Test_Multiple_Nested_Goroutines(t *testing.T) {
-	s1 := NewCaddy(false)
+	s1 := New(false)
 	x := 0
 
 	for i := 0; i < 10; i++ {
@@ -156,7 +156,7 @@ func Test_Multiple_Nested_Goroutines(t *testing.T) {
 }
 
 func Test_Looper_Zero_Duration(t *testing.T) {
-	s1 := NewCaddy(false)
+	s1 := New(false)
 	c := make(chan int)
 	x := 0
 
@@ -183,7 +183,7 @@ func Test_Looper_Zero_Duration(t *testing.T) {
 }
 
 func Test_Looper_NonZero_Duration(t *testing.T) {
-	s1 := NewCaddy(false)
+	s1 := New(false)
 	c := make(chan int)
 	x := 0
 
@@ -210,7 +210,7 @@ func Test_Looper_NonZero_Duration(t *testing.T) {
 }
 
 func Test_Looper_RunImmediately(t *testing.T) {
-	s1 := NewCaddy(false)
+	s1 := New(false)
 	c := make(chan int)
 
 	looperTime := time.Second * 3
@@ -232,7 +232,7 @@ func Test_Looper_RunImmediately(t *testing.T) {
 }
 
 func Test_Looper_With_Goroutine(t *testing.T) {
-	s1 := NewCaddy(false)
+	s1 := New(false)
 	c := make(chan int)
 	x := 0
 

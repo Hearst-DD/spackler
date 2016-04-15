@@ -22,9 +22,9 @@ type Caddy struct {
 
 var ErrStopping = errors.New("spackler: stopping")
 
-// NewCaddy returns a new, initilized Caddy instance.
+// New returns a new, initilized Caddy instance.
 // If true is passed in, this instance will stop on SIGINT and SIGTERM.
-func NewCaddy(stopOnOS bool) *Caddy {
+func New(stopOnOS bool) *Caddy {
 	c := &Caddy{}
 	c.o = &sync.Once{}
 	c.wg = &sync.WaitGroup{}
@@ -63,21 +63,6 @@ func (c *Caddy) Go(f func(caddy *Caddy)) error {
 	}()
 
 	return nil
-}
-
-// Wait wraps sync.WaitGroup.Wait() on all tracked goroutines.
-func (c *Caddy) Wait() {
-	c.wg.Wait()
-}
-
-// Stopping exposes read access to stopChan.
-func (c *Caddy) Stopping() (ch <-chan bool) {
-	return (<-chan bool)(c.stopChan)
-}
-
-// Stop sends a stop signal.
-func (c *Caddy) Stop() {
-	c.sigChan <- syscall.SIGINT
 }
 
 // Looper provides cancelable task execution on the specified interval.  It does
@@ -126,6 +111,21 @@ func (c *Caddy) Looper(interval time.Duration, runImmediately bool, f func()) {
 // equivalent to calling Stop().
 func (c *Caddy) SigChan() (ch chan<- os.Signal) {
 	return (chan<- os.Signal)(c.sigChan)
+}
+
+// Stop sends a stop signal.
+func (c *Caddy) Stop() {
+	c.sigChan <- syscall.SIGINT
+}
+
+// Stopping exposes read access to stopChan.
+func (c *Caddy) Stopping() (ch <-chan bool) {
+	return (<-chan bool)(c.stopChan)
+}
+
+// Wait wraps sync.WaitGroup.Wait() on all tracked goroutines.
+func (c *Caddy) Wait() {
+	c.wg.Wait()
 }
 
 // private methods //
