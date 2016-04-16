@@ -8,12 +8,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const TEST_TIMEOUT = time.Duration(5 * time.Second)
+const SHORT_TIMEOUT = time.Duration(1 * time.Second)
+const LONG_TIMEOUT = time.Duration(30 * time.Second)
 
 func Test_No_Goroutines(t *testing.T) {
 	s := New(false)
 
-	assert.True(t, wait(s))
+	assert.True(t, wait(s, SHORT_TIMEOUT))
 }
 
 func Test_Stop(t *testing.T) {
@@ -27,11 +28,11 @@ func Test_Stop(t *testing.T) {
 
 	wg.Wait()
 
-	assert.False(t, wait(s1)) // Stop() required
+	assert.False(t, wait(s1, SHORT_TIMEOUT)) // Stop() required
 
 	s1.Stop()
 
-	assert.True(t, wait(s1))
+	assert.True(t, wait(s1, LONG_TIMEOUT))
 }
 
 func Test_SigChan(t *testing.T) {
@@ -43,7 +44,7 @@ func Test_SigChan(t *testing.T) {
 	})
 	close(sigChan) // same as Stop()
 
-	assert.True(t, wait(s1))
+	assert.True(t, wait(s1, LONG_TIMEOUT))
 }
 
 func Test_Blocking(t *testing.T) {
@@ -76,25 +77,30 @@ func Test_Blocking(t *testing.T) {
 	select {
 	case <-c2:
 		assert.True(t, true)
-	case <-time.After(TEST_TIMEOUT):
+	case <-time.After(LONG_TIMEOUT):
 		assert.True(t, false) // spackler should unblock
 	}
 }
 
 func Test_Nested_Goroutines(t *testing.T) {
 	s1 := New(false)
+	m := sync.Mutex{}
 	x := 0
 
 	s1.Go(func(s2 *Caddy) {
 		s2.Go(func(s3 *Caddy) {
+			m.Lock()
 			x++
+			m.Unlock()
 		})
 
+		m.Lock()
 		x++
+		m.Unlock()
 	})
 	s1.Stop()
 
-	assert.True(t, wait(s1))
+	assert.True(t, wait(s1, LONG_TIMEOUT))
 	assert.True(t, 2 == x)
 }
 
@@ -121,37 +127,45 @@ func Test_While_Stopping(t *testing.T) {
 
 func Test_Ten_Goroutines(t *testing.T) {
 	s1 := New(false)
+	m := sync.Mutex{}
 	x := 0
 
 	for i := 0; i < 10; i++ {
 		s1.Go(func(s2 *Caddy) {
+			m.Lock()
 			x++
+			m.Unlock()
 		})
 	}
 	s1.Stop()
 
-	assert.True(t, wait(s1))
+	assert.True(t, wait(s1, LONG_TIMEOUT))
 	assert.True(t, 10 == x)
 }
 
 func Test_Multiple_Nested_Goroutines(t *testing.T) {
 	s1 := New(false)
+	m := sync.Mutex{}
 	x := 0
 
 	for i := 0; i < 10; i++ {
 		s1.Go(func(s2 *Caddy) {
+			m.Lock()
+			x++
+			m.Unlock()
+
 			for j := 0; j < 10; j++ {
 				s2.Go(func(s3 *Caddy) {
+					m.Lock()
 					x++
+					m.Unlock()
 				})
 			}
-
-			x++
 		})
 	}
 	s1.Stop()
 
-	assert.True(t, wait(s1))
+	assert.True(t, wait(s1, LONG_TIMEOUT))
 	assert.True(t, 110 == x)
 }
 
@@ -178,7 +192,7 @@ func Test_Looper_Zero_Duration(t *testing.T) {
 	s1.Stop() // broadcast quit
 	<-c       // end loop func
 
-	assert.True(t, wait(s1))
+	assert.True(t, wait(s1, LONG_TIMEOUT))
 	assert.True(t, 3 == x)
 }
 
@@ -205,7 +219,7 @@ func Test_Looper_NonZero_Duration(t *testing.T) {
 	s1.Stop() // broadcast quit
 	<-c       // end loop func
 
-	assert.True(t, wait(s1))
+	assert.True(t, wait(s1, LONG_TIMEOUT))
 	assert.True(t, 3 == x)
 }
 
@@ -234,13 +248,16 @@ func Test_Looper_RunImmediately(t *testing.T) {
 func Test_Looper_With_Goroutine(t *testing.T) {
 	s1 := New(false)
 	c := make(chan int)
+	m := sync.Mutex{}
 	x := 0
 
 	s1.Go(func(s2 *Caddy) {
 		s2.Looper(0, false, func() {
 			c <- 1
 			s2.Go(func(s3 *Caddy) {
+				m.Lock()
 				x++
+				m.Unlock()
 			})
 			c <- 1
 		})
@@ -256,12 +273,12 @@ func Test_Looper_With_Goroutine(t *testing.T) {
 	s1.Stop() // broadcast quit
 	<-c       // end loop func
 
-	assert.True(t, wait(s1))
+	assert.True(t, wait(s1, LONG_TIMEOUT))
 	assert.True(t, 3 == x)
 }
 
-// true if Spackler.Wait() returns in time
-func wait(s *Caddy) bool {
+// true if Caddy.Wait() returns in time
+func wait(s *Caddy, timeout time.Duration) bool {
 	c := make(chan int)
 
 	go func() {
@@ -273,7 +290,7 @@ func wait(s *Caddy) bool {
 	select {
 	case <-c:
 		pass = true
-	case <-time.After(TEST_TIMEOUT):
+	case <-time.After(timeout):
 	}
 
 	return pass
