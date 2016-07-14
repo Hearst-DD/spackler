@@ -41,7 +41,7 @@ func New(stopOnOS bool) *Caddy {
 // Go provides goroutine tracking.  It is used in place of the go statement.
 // It calls the provided function passing in a *Caddy which may be used to make
 // subsequent calls to Go() and Looper().
-func (c *Caddy) Go(f func(caddy *Caddy)) error {
+func (c *Caddy) Go(f func(caddy *Caddy, v1 ...interface{}), v2 ...interface{}) error {
 	c.listen()
 
 	c2 := c
@@ -57,10 +57,10 @@ func (c *Caddy) Go(f func(caddy *Caddy)) error {
 	}
 
 	c.wg.Add(1)
-	go func() {
+	go func(v3 ...interface{}) {
 		defer c.wg.Done()
-		f(c2)
-	}()
+		f(c2, v3...)
+	}(v2...)
 
 	return nil
 }

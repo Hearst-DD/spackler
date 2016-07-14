@@ -22,7 +22,7 @@ func Test_Stop(t *testing.T) {
 	wg := sync.WaitGroup{}
 
 	wg.Add(1)
-	s1.Go(func(s2 *Caddy) {
+	s1.Go(func(s2 *Caddy, v ...interface{}) {
 		defer wg.Done()
 	})
 
@@ -39,7 +39,7 @@ func Test_SigChan(t *testing.T) {
 	s1 := New(false)
 	sigChan := s1.SigChan()
 
-	s1.Go(func(s2 *Caddy) {
+	s1.Go(func(s2 *Caddy, v ...interface{}) {
 		return
 	})
 	close(sigChan) // same as Stop()
@@ -53,7 +53,7 @@ func Test_Blocking(t *testing.T) {
 	c2 := make(chan int)
 
 	// create a blocked goroutine
-	s1.Go(func(s2 *Caddy) {
+	s1.Go(func(s2 *Caddy, v ...interface{}) {
 		<-c1
 	})
 	s1.Stop()
@@ -87,8 +87,8 @@ func Test_Nested_Goroutines(t *testing.T) {
 	m := sync.Mutex{}
 	x := 0
 
-	s1.Go(func(s2 *Caddy) {
-		s2.Go(func(s3 *Caddy) {
+	s1.Go(func(s2 *Caddy, v2 ...interface{}) {
+		s2.Go(func(s3 *Caddy, v3 ...interface{}) {
 			m.Lock()
 			x++
 			m.Unlock()
@@ -108,9 +108,9 @@ func Test_While_Stopping(t *testing.T) {
 	s1 := New(false)
 	c := make(chan int)
 
-	s1.Go(func(s2 *Caddy) {
+	s1.Go(func(s2 *Caddy, v2 ...interface{}) {
 		<-c
-		err := s2.Go(func(s3 *Caddy) {
+		err := s2.Go(func(s3 *Caddy, v3 ...interface{}) {
 			return
 		})
 		assert.Nil(t, err)
@@ -119,7 +119,7 @@ func Test_While_Stopping(t *testing.T) {
 	s1.Stop()
 	c <- 1
 
-	err := s1.Go(func(s2 *Caddy) {
+	err := s1.Go(func(s2 *Caddy, v2 ...interface{}) {
 		return
 	})
 	assert.True(t, nil != err)
@@ -131,7 +131,7 @@ func Test_Ten_Goroutines(t *testing.T) {
 	x := 0
 
 	for i := 0; i < 10; i++ {
-		s1.Go(func(s2 *Caddy) {
+		s1.Go(func(s2 *Caddy, v2 ...interface{}) {
 			m.Lock()
 			x++
 			m.Unlock()
@@ -149,13 +149,13 @@ func Test_Multiple_Nested_Goroutines(t *testing.T) {
 	x := 0
 
 	for i := 0; i < 10; i++ {
-		s1.Go(func(s2 *Caddy) {
+		s1.Go(func(s2 *Caddy, v2 ...interface{}) {
 			m.Lock()
 			x++
 			m.Unlock()
 
 			for j := 0; j < 10; j++ {
-				s2.Go(func(s3 *Caddy) {
+				s2.Go(func(s3 *Caddy, v3 ...interface{}) {
 					m.Lock()
 					x++
 					m.Unlock()
@@ -174,7 +174,7 @@ func Test_Looper_Zero_Duration(t *testing.T) {
 	c := make(chan int)
 	x := 0
 
-	s1.Go(func(s2 *Caddy) {
+	s1.Go(func(s2 *Caddy, v2 ...interface{}) {
 		s2.Looper(0, false, func() {
 			c <- 1
 			x++
@@ -201,7 +201,7 @@ func Test_Looper_NonZero_Duration(t *testing.T) {
 	c := make(chan int)
 	x := 0
 
-	s1.Go(func(s2 *Caddy) {
+	s1.Go(func(s2 *Caddy, v2 ...interface{}) {
 		s2.Looper(1, false, func() {
 			c <- 1
 			x++
@@ -229,7 +229,7 @@ func Test_Looper_RunImmediately(t *testing.T) {
 
 	looperTime := time.Second * 3
 
-	s1.Go(func(s2 *Caddy) {
+	s1.Go(func(s2 *Caddy, v2 ...interface{}) {
 		s2.Looper(looperTime, true, func() {
 			close(c)
 		})
@@ -251,10 +251,10 @@ func Test_Looper_With_Goroutine(t *testing.T) {
 	m := sync.Mutex{}
 	x := 0
 
-	s1.Go(func(s2 *Caddy) {
+	s1.Go(func(s2 *Caddy, v2 ...interface{}) {
 		s2.Looper(0, false, func() {
 			c <- 1
-			s2.Go(func(s3 *Caddy) {
+			s2.Go(func(s3 *Caddy, v3 ...interface{}) {
 				m.Lock()
 				x++
 				m.Unlock()
